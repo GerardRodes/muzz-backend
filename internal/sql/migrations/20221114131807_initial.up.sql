@@ -1,0 +1,10 @@
+CREATE TABLE users (
+	id 				BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+	email 		VARCHAR(255) NOT NULL,
+	password 	BINARY(60) NOT NULL,
+	name 			VARCHAR(255) NOT NULL,
+	gender 		ENUM('male', 'female') NOT NULL,
+	age 			TINYINT UNSIGNED NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE INDEX(email)
+);

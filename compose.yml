@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  # todo: muzz
+
+  # todo: redis
+
+  db:
+    image: mariadb:10.9-jammy
+    restart: always
+    environment:
+      MARIADB_DATABASE: $DB_DATABASE
+      MARIADB_USER: $DB_USER
+      MARIADB_PASSWORD: $DB_PASSWORD
+      MARIADB_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+    ports:
+      - "13306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
