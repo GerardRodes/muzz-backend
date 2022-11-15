@@ -1,15 +1,16 @@
 package domain
 
 import (
-	"math/rand"
+	"context"
 	"strings"
 	"testing"
 )
 
 func TestCreate(t *testing.T) {
 	testcases := map[string]struct {
-		u   User
-		err string
+		u        User
+		password string
+		err      string
 	}{
 		"success": {
 			u: User{
@@ -18,6 +19,7 @@ func TestCreate(t *testing.T) {
 				Gender: GenderMale,
 				Age:    18,
 			},
+			password: "123456",
 		},
 		"no email": {
 			u: User{
@@ -25,7 +27,8 @@ func TestCreate(t *testing.T) {
 				Gender: GenderMale,
 				Age:    18,
 			},
-			err: "invalid email",
+			password: "123456",
+			err:      "invalid email",
 		},
 		"bad email": {
 			u: User{
@@ -34,7 +37,8 @@ func TestCreate(t *testing.T) {
 				Gender: GenderMale,
 				Age:    18,
 			},
-			err: "invalid email",
+			password: "123456",
+			err:      "invalid email",
 		},
 		"no name": {
 			u: User{
@@ -42,7 +46,8 @@ func TestCreate(t *testing.T) {
 				Gender: GenderMale,
 				Age:    18,
 			},
-			err: "empty name",
+			password: "123456",
+			err:      "empty name",
 		},
 		"no gender": {
 			u: User{
@@ -50,7 +55,8 @@ func TestCreate(t *testing.T) {
 				Name:  "test",
 				Age:   18,
 			},
-			err: "unknown gender",
+			password: "123456",
+			err:      "unknown gender",
 		},
 		"unknown gender": {
 			u: User{
@@ -59,7 +65,8 @@ func TestCreate(t *testing.T) {
 				Gender: "test",
 				Age:    18,
 			},
-			err: "unknown gender",
+			password: "123456",
+			err:      "unknown gender",
 		},
 		"age lower than 18": {
 			u: User{
@@ -68,7 +75,27 @@ func TestCreate(t *testing.T) {
 				Gender: GenderMale,
 				Age:    17,
 			},
-			err: "age must be equal or above 18",
+			password: "123456",
+			err:      "age must be equal or above 18",
+		},
+		"short password": {
+			u: User{
+				Email:  "test@test.com",
+				Name:   "test",
+				Gender: GenderMale,
+				Age:    18,
+			},
+			password: "12456",
+			err:      "password must have at least 6 characters",
+		},
+		"no password": {
+			u: User{
+				Email:  "test@test.com",
+				Name:   "test",
+				Gender: GenderMale,
+				Age:    18,
+			},
+			err: "password must have at least 6 characters",
 		},
 	}
 
@@ -78,22 +105,25 @@ func TestCreate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			userSvc := UserSvc{r: userRepoStub{}}
-			_, err := userSvc.Create(tc.u)
+			userSvc := NewUserSvc(userRepoStub{})
+			_, err := userSvc.Create(context.Background(), tc.u, tc.password)
 			var errMsg string
 			if err != nil {
 				errMsg = err.Error()
 			}
+			if tc.err == "" && errMsg != "" {
+				t.Errorf("expected no error but received %q", errMsg)
+			}
 			if !strings.Contains(errMsg, tc.err) {
-				t.Errorf("test failed:\nexpected %q\nreceived %q", tc.err, errMsg)
+				t.Errorf("\nexpected %q\nreceived %q", tc.err, errMsg)
 			}
 		})
 	}
 }
 
 func TestCreateRandom(t *testing.T) {
-	userSvc := UserSvc{r: userRepoStub{654}}
-	u, err := userSvc.CreateRandom()
+	userSvc := NewUserSvc(userRepoStub{654})
+	u, err := userSvc.CreateRandom(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error: %v", err)
 	}
@@ -111,10 +141,10 @@ type userRepoStub struct {
 	id uint32
 }
 
-func (r userRepoStub) Create(u User) (id uint32, err error) {
-	if id != 0 {
-		return id, nil
-	}
+func (r userRepoStub) Create(ctx context.Context, u User, password []byte) (uint32, error) {
+	return r.id, nil
+}
 
-	return rand.Uint32(), nil
+func (r userRepoStub) List(ctx context.Context, filter UserRepoFilter) ([]User, error) {
+	return nil, nil
 }
