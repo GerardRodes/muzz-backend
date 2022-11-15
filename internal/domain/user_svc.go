@@ -10,15 +10,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserRepoFilter struct {
-	ExcludeUsers         []uint32
-	GenderOpposedToUsers []uint32
-	NotSwipedByUsers     []uint32
-}
-
 type UserRepo interface {
+	Get(ctx context.Context, userID uint32) (user User, err error)
 	Create(ctx context.Context, user User, passwordHash []byte) (id uint32, err error)
-	List(ctx context.Context, filter UserRepoFilter) ([]User, error)
+	ListPotentialMatches(ctx context.Context, user User) ([]User, error)
 }
 
 type userSvc struct {
@@ -74,14 +69,14 @@ func (s userSvc) Create(ctx context.Context, user User, password string) (uint32
 //   - are from the opposed gender
 //   - have not been already swiped by the user
 func (s userSvc) ListPotentialMatches(ctx context.Context, userID uint32) ([]User, error) {
-	users, err := s.r.List(ctx, UserRepoFilter{
-		ExcludeUsers:         []uint32{userID},
-		GenderOpposedToUsers: []uint32{userID},
-		NotSwipedByUsers:     []uint32{userID},
-	})
-
+	user, err := s.r.Get(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("list potential matches: %w", err)
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+
+	users, err := s.r.ListPotentialMatches(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("list matches: %w", err)
 	}
 
 	return users, nil

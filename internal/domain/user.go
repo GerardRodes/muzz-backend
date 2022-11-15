@@ -10,7 +10,7 @@ import (
 
 type User struct {
 	ID     uint32 `json:"id"`
-	Email  string `json:"email"`
+	Email  string `json:"email,omitempty"`
 	Name   string `json:"name"`
 	Gender Gender `json:"gender"`
 	Age    uint8  `json:"age"`

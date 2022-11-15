@@ -27,9 +27,12 @@ func main() {
 		}
 	}()
 
+	userSvc := domain.NewUserSvc(mariadb.NewUserRepo(db))
+
 	if err := httpserver.Init(httpserver.Config{
-		HTTPPort: cfg.HTTPPort,
-		UserSvc:  domain.NewUserSvc(mariadb.NewUserRepo(db)),
+		HTTPPort:   cfg.HTTPPort,
+		UserSvc:    userSvc,
+		ProfileSvc: userSvc,
 	}); err != nil {
 		log.Fatalf("cannot init http server: %s", err)
 	}

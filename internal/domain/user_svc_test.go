@@ -149,6 +149,10 @@ func (r userRepoStub) Create(ctx context.Context, u User, password []byte) (uint
 	return r.id, nil
 }
 
-func (r userRepoStub) List(ctx context.Context, filter UserRepoFilter) ([]User, error) {
+func (r userRepoStub) Get(ctx context.Context, userID uint32) (user User, err error) {
+	return User{}, nil
+}
+
+func (r userRepoStub) ListPotentialMatches(ctx context.Context, user User) ([]User, error) {
 	return nil, nil
 }
