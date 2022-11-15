@@ -123,13 +123,17 @@ func TestCreate(t *testing.T) {
 
 func TestCreateRandom(t *testing.T) {
 	userSvc := NewUserSvc(userRepoStub{654})
-	u, err := userSvc.CreateRandom(context.Background())
+	u, password, err := userSvc.CreateRandom(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error: %v", err)
 	}
 
 	if u.ID != 654 {
 		t.Fatal("the id returned from the repo has not been assigned to the user")
+	}
+
+	if password == "" {
+		t.Fatal("missing password")
 	}
 
 	if err := u.Validate(); err != nil {

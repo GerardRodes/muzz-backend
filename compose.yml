@@ -9,10 +9,10 @@ services:
     image: mariadb:10.9-jammy
     restart: always
     environment:
-      MARIADB_DATABASE: $DB_DATABASE
-      MARIADB_USER: $DB_USER
-      MARIADB_PASSWORD: $DB_PASSWORD
-      MARIADB_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+      MARIADB_NAME: $MUZZ_DB_NAME
+      MARIADB_USER: $MUZZ_DB_USER
+      MARIADB_PASSWORD: $MUZZ_DB_PASSWORD
+      MARIADB_ROOT_PASSWORD: $MUZZ_DB_ROOT_PASSWORD
     ports:
       - "13306:3306"
     volumes:

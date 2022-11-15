@@ -9,11 +9,11 @@ import (
 )
 
 type User struct {
-	ID     uint32
-	Email  string
-	Name   string
-	Gender Gender
-	Age    uint8
+	ID     uint32 `json:"id"`
+	Email  string `json:"email"`
+	Name   string `json:"name"`
+	Gender Gender `json:"gender"`
+	Age    uint8  `json:"age"`
 }
 
 func (u User) Validate() error {

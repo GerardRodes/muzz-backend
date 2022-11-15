@@ -21,16 +21,16 @@ type UserRepo interface {
 	List(ctx context.Context, filter UserRepoFilter) ([]User, error)
 }
 
-type UserSvc struct {
+type userSvc struct {
 	r UserRepo
 }
 
-func NewUserSvc(r UserRepo) UserSvc {
-	return UserSvc{r}
+func NewUserSvc(r UserRepo) userSvc {
+	return userSvc{r}
 }
 
 // CreateRandom creates a user with random values
-func (s UserSvc) CreateRandom(ctx context.Context) (User, error) {
+func (s userSvc) CreateRandom(ctx context.Context) (User, string, error) {
 	name := fmt.Sprintf("random-%d", time.Now().UnixMilli())
 	user := User{
 		Email:  fmt.Sprintf("%s@muzz.com", name),
@@ -41,13 +41,13 @@ func (s UserSvc) CreateRandom(ctx context.Context) (User, error) {
 
 	var err error
 	if user.ID, err = s.Create(ctx, user, name); err != nil {
-		return User{}, fmt.Errorf("creating user: %w", err)
+		return User{}, "", fmt.Errorf("creating user: %w", err)
 	}
 
-	return user, nil
+	return user, name, nil
 }
 
-func (s UserSvc) Create(ctx context.Context, user User, password string) (uint32, error) {
+func (s userSvc) Create(ctx context.Context, user User, password string) (uint32, error) {
 	if err := user.Validate(); err != nil {
 		return 0, fmt.Errorf("validating user: %w", err)
 	}
@@ -73,7 +73,7 @@ func (s UserSvc) Create(ctx context.Context, user User, password string) (uint32
 //   - are not the user itself
 //   - are from the opposed gender
 //   - have not been already swiped by the user
-func (s UserSvc) ListPotentialMatches(ctx context.Context, userID uint32) ([]User, error) {
+func (s userSvc) ListPotentialMatches(ctx context.Context, userID uint32) ([]User, error) {
 	users, err := s.r.List(ctx, UserRepoFilter{
 		ExcludeUsers:         []uint32{userID},
 		GenderOpposedToUsers: []uint32{userID},

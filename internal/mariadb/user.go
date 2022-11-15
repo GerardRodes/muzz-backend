@@ -7,15 +7,15 @@ import (
 	"github.com/GerardRodes/muzz-backend/internal/domain"
 )
 
-type UserRepo struct {
+type userRepo struct {
 	db *sql.DB
 }
 
-func NewUserRepo(db *sql.DB) UserRepo {
-	return UserRepo{db}
+func NewUserRepo(db *sql.DB) userRepo {
+	return userRepo{db}
 }
 
-const userRepoCreate = `
+const userRepoCreateQuery = `
 INSERT INTO users (
 	email,
 	password,
@@ -28,10 +28,12 @@ INSERT INTO users (
 RETURNING id
 `
 
-func (r UserRepo) Create(ctx context.Context, user domain.User) (id uint32, err error) {
-	return 0, nil
+func (r userRepo) Create(ctx context.Context, user domain.User, passwordHash []byte) (id uint32, err error) {
+	row := r.db.QueryRowContext(ctx, userRepoCreateQuery, user.Email, passwordHash, user.Name, user.Gender, user.Age)
+	err = row.Scan(&id)
+	return
 }
 
-func (r UserRepo) List(ctx context.Context, filter domain.UserRepoFilter) ([]domain.User, error) {
+func (r userRepo) List(ctx context.Context, filter domain.UserRepoFilter) ([]domain.User, error) {
 	return nil, nil
 }
