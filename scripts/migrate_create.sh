@@ -3,4 +3,4 @@
 
 basedir=$(dirname "$0")/..
 
-migrate create -dir $basedir/internal/sql/migrations -ext sql $@
+migrate create -dir $basedir/internal/mariadb/migrations -ext sql $@
