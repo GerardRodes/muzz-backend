@@ -24,14 +24,37 @@ SELECT
 	u.age
 FROM users u
 WHERE u.id != ?
-	AND u.gender != ?
 	AND u.id NOT IN (
 		SELECT s.profile_id FROM swipes s WHERE s.user_id = ?
 	)
 `
+const listPotentialMatchesMinAgeFilter = `
+	AND u.age >= ?
+`
+const listPotentialMatchesMaxAgeFilter = `
+	AND u.age <= ?
+`
+const listPotentialMatchesGenderFilter = `
+	AND u.gender = ?
+`
 
-func (r Repo) ListPotentialMatches(ctx context.Context, user domain.User) ([]domain.User, error) {
-	rows, err := r.db.QueryContext(ctx, listPotentialMatchesQuery, user.ID, user.Gender, user.ID)
+func (r Repo) ListPotentialMatches(ctx context.Context, user domain.User, filter domain.ListPotentialMatchesFilter) ([]domain.User, error) {
+	query := listPotentialMatchesQuery
+	args := []any{user.ID, user.ID}
+	if filter.AgeMin != 0 {
+		query += listPotentialMatchesMinAgeFilter
+		args = append(args, filter.AgeMin)
+	}
+	if filter.AgeMax != 0 {
+		query += listPotentialMatchesMaxAgeFilter
+		args = append(args, filter.AgeMax)
+	}
+	if filter.Gender != "" {
+		query += listPotentialMatchesGenderFilter
+		args = append(args, filter.Gender)
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("execute query: %w", err)
 	}

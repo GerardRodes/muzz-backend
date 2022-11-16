@@ -14,7 +14,7 @@ type Repo interface {
 	GetUser(ctx context.Context, userID uint32) (User, error)
 	GetUserIDAndPasswordByEmail(ctx context.Context, email string) (userID uint32, passHash []byte, err error)
 	CreateUser(ctx context.Context, user User, passwordHash []byte) (uint32, error)
-	ListPotentialMatches(ctx context.Context, user User) ([]User, error)
+	ListPotentialMatches(ctx context.Context, user User, filter ListPotentialMatchesFilter) ([]User, error)
 	Swipe(ctx context.Context, userID, profileID uint32, preference bool) error
 	BothLiked(ctx context.Context, userID1, userID2 uint32) (bool, error)
 	CreateMatch(ctx context.Context, userID1, userID2 uint32) (uint64, error)
@@ -34,17 +34,32 @@ func NewService(r Repo, ss SessionStorage) Service {
 	return Service{r, ss}
 }
 
+type ListPotentialMatchesFilter struct {
+	AgeMin uint8
+	AgeMax uint8
+	Gender Gender
+}
+
 // ListPotentialMatches lists profiles which:
 //   - are not the user itself
 //   - are from the opposed gender
 //   - have not been already swiped by the user
-func (s Service) ListPotentialMatches(ctx context.Context, userID uint32) ([]User, error) {
+func (s Service) ListPotentialMatches(ctx context.Context, userID uint32, filter ListPotentialMatchesFilter) ([]User, error) {
 	user, err := s.r.GetUser(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
 	}
 
-	users, err := s.r.ListPotentialMatches(ctx, user)
+	// by default apply the opposed gender
+	if filter.Gender == "" {
+		if user.Gender == GenderFemale {
+			filter.Gender = GenderMale
+		} else {
+			filter.Gender = GenderFemale
+		}
+	}
+
+	users, err := s.r.ListPotentialMatches(ctx, user, filter)
 	if err != nil {
 		return nil, fmt.Errorf("list matches: %w", err)
 	}

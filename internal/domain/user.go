@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
-
-	"golang.org/x/exp/slices"
 )
 
 type User struct {
@@ -21,8 +19,8 @@ func (u User) Validate() error {
 		return errors.New("empty name")
 	}
 
-	if !slices.Contains(Genders, u.Gender) {
-		return fmt.Errorf("unknown gender %q, expected one of %q", u.Gender, Genders)
+	if err := u.Gender.Validate(); err != nil {
+		return err
 	}
 
 	if u.Age < 18 {

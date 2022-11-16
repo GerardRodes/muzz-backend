@@ -153,7 +153,7 @@ func (r userRepoStub) CreateUser(ctx context.Context, user User, passwordHash []
 	return r.id, nil
 }
 
-func (r userRepoStub) ListPotentialMatches(ctx context.Context, user User) ([]User, error) {
+func (r userRepoStub) ListPotentialMatches(ctx context.Context, user User, filter ListPotentialMatchesFilter) ([]User, error) {
 	return nil, nil
 }
 
