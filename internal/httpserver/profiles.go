@@ -9,15 +9,9 @@ import (
 )
 
 func (c Controller) profiles(e echo.Context) error {
-	type req struct {
-		UserID uint32 `query:"userID"`
-	}
-	var r req
-	if err := e.Bind(&r); err != nil {
-		return err
-	}
+	userID := domain.UserIDFromContext(e.Request().Context())
 
-	users, err := c.svc.ListPotentialMatches(e.Request().Context(), r.UserID)
+	users, err := c.svc.ListPotentialMatches(e.Request().Context(), userID)
 	if err != nil {
 		return fmt.Errorf("cannot list potential matches: %w", err)
 	}

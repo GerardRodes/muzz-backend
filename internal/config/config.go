@@ -12,6 +12,7 @@ type Config struct {
 	DBUser     string `env:"MUZZ_DB_USER"`
 	DBPassword string `env:"MUZZ_DB_PASSWORD"`
 	HTTPPort   string `env:"MUZZ_HTTP_PORT"`
+	KVAddr     string `env:"MUZZ_KV_ADDR"`
 }
 
 func New() Config {

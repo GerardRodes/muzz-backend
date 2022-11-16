@@ -3,12 +3,12 @@ package httpserver
 import (
 	"net/http"
 
+	"github.com/GerardRodes/muzz-backend/internal/domain"
 	"github.com/labstack/echo/v4"
 )
 
 func (c Controller) swipe(e echo.Context) error {
 	type req struct {
-		UserID     uint32 `json:"userID"`
 		ProfileID  uint32 `json:"profileID"`
 		Preference bool   `json:"preference"`
 	}
@@ -17,7 +17,9 @@ func (c Controller) swipe(e echo.Context) error {
 		return err
 	}
 
-	matchID, err := c.svc.Swipe(e.Request().Context(), r.UserID, r.ProfileID, r.Preference)
+	userID := domain.UserIDFromContext(e.Request().Context())
+
+	matchID, err := c.svc.Swipe(e.Request().Context(), userID, r.ProfileID, r.Preference)
 	if err != nil {
 		return err
 	}

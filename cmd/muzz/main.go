@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -10,15 +11,26 @@ import (
 	"github.com/GerardRodes/muzz-backend/internal/domain"
 	"github.com/GerardRodes/muzz-backend/internal/httpserver"
 	"github.com/GerardRodes/muzz-backend/internal/mariadb"
+	"github.com/GerardRodes/muzz-backend/internal/session"
+	"github.com/go-redis/redis/v8"
 	"github.com/go-sql-driver/mysql"
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// run handles all the initialization and defer callbacks
+// moving it out of main ensures that defer calls desconnecting
+// from sources will execute
+func run() error {
 	cfg := config.New()
 
 	db, err := initDBHandle(cfg)
 	if err != nil {
-		log.Fatalf("cannot init db handler: %s", err)
+		return fmt.Errorf("cannot init db handler: %w", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
@@ -28,13 +40,37 @@ func main() {
 		}
 	}()
 
+	rdb := redis.NewClient(&redis.Options{Addr: cfg.KVAddr})
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+
+		if err := rdb.Ping(ctx).Err(); err != nil {
+			return fmt.Errorf("cannot reach redis: %w", err)
+		}
+	}
+	defer func() {
+		if err := rdb.Close(); err != nil {
+			log.Println(err)
+		} else {
+			log.Println("closed redis connection")
+		}
+	}()
+
+	ss := session.NewSessionStorage(session.Config{
+		RedisClient: rdb,
+		Expiration:  time.Hour * 24 * 7,
+	})
+
 	if err := httpserver.Init(httpserver.Config{
 		HTTPPort:        cfg.HTTPPort,
-		Service:         domain.NewService(mariadb.NewRepo(db)),
+		Service:         domain.NewService(mariadb.NewRepo(db), ss),
 		HandlersTimeout: time.Second * 5,
 	}); err != nil {
-		log.Fatalf("cannot init http server: %s", err)
+		return fmt.Errorf("cannot init http server: %w", err)
 	}
+
+	return nil
 }
 
 func initDBHandle(cfg config.Config) (*sql.DB, error) {

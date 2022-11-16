@@ -105,7 +105,7 @@ func TestCreateUser(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			userSvc := NewService(userRepoStub{})
+			userSvc := NewService(userRepoStub{}, nil)
 			_, err := userSvc.CreateUser(context.Background(), tc.u, tc.password)
 			var errMsg string
 			if err != nil {
@@ -122,7 +122,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestCreateRandomUser(t *testing.T) {
-	userSvc := NewService(userRepoStub{654})
+	userSvc := NewService(userRepoStub{654}, nil)
 	u, password, err := userSvc.CreateRandomUser(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error: %v", err)
@@ -167,4 +167,8 @@ func (r userRepoStub) BothLiked(ctx context.Context, userID, profileID uint32) (
 
 func (r userRepoStub) CreateMatch(ctx context.Context, userID1, userID2 uint32) (uint64, error) {
 	return 0, nil
+}
+
+func (r userRepoStub) GetUserIDAndPasswordByEmail(ctx context.Context, email string) (userID uint32, passHash []byte, err error) {
+	return 0, nil, nil
 }

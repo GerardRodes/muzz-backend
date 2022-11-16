@@ -2,11 +2,17 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
 )
+
+var ErrWrongPassword = errors.New("wrong password")
 
 type Repo interface {
 	GetUser(ctx context.Context, userID uint32) (User, error)
+	GetUserIDAndPasswordByEmail(ctx context.Context, email string) (userID uint32, passHash []byte, err error)
 	CreateUser(ctx context.Context, user User, passwordHash []byte) (uint32, error)
 	ListPotentialMatches(ctx context.Context, user User) ([]User, error)
 	Swipe(ctx context.Context, userID, profileID uint32, preference bool) error
@@ -14,12 +20,18 @@ type Repo interface {
 	CreateMatch(ctx context.Context, userID1, userID2 uint32) (uint64, error)
 }
 
-type Service struct {
-	r Repo
+type SessionStorage interface {
+	Create(ctx context.Context, userID uint32) (sessionID string, err error)
+	Load(ctx context.Context, sessionID string) (userID uint32, err error)
 }
 
-func NewService(r Repo) Service {
-	return Service{r}
+type Service struct {
+	r  Repo
+	ss SessionStorage
+}
+
+func NewService(r Repo, ss SessionStorage) Service {
+	return Service{r, ss}
 }
 
 // ListPotentialMatches lists profiles which:
@@ -60,4 +72,29 @@ func (s Service) Swipe(ctx context.Context, userID, profileID uint32, preference
 	}
 
 	return matchID, nil
+}
+
+func (s Service) Login(ctx context.Context, email, password string) (string, error) {
+	userID, passHash, err := s.r.GetUserIDAndPasswordByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return "", ErrWrongPassword
+		}
+		return "", fmt.Errorf("get user: %w", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword(passHash, []byte(password)); err != nil {
+		return "", ErrWrongPassword
+	}
+
+	sessionID, err := s.ss.Create(ctx, userID)
+	if err != nil {
+		return "", fmt.Errorf("create session: %w", err)
+	}
+
+	return sessionID, nil
+}
+
+func (s Service) LoadSession(ctx context.Context, sessionID string) (uint32, error) {
+	return s.ss.Load(ctx, sessionID)
 }

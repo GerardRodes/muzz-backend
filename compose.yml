@@ -3,7 +3,12 @@ version: '3.9'
 services:
   # todo: muzz
 
-  # todo: redis
+  kv:
+    image: redis:7.0-bullseye
+    ports:
+      - "$MUZZ_DEV_KV_PORT:6379"
+    volumes:
+      - kv-data:/data
 
   db:
     image: mariadb:10.9-jammy
@@ -20,3 +25,4 @@ services:
 
 volumes:
   db-data:
+  kv-data:
