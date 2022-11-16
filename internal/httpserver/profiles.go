@@ -10,9 +10,10 @@ import (
 
 func (c Controller) profiles(e echo.Context) error {
 	type req struct {
-		AgeMin uint8         `query:"ageMin"`
-		AgeMax uint8         `query:"ageMax"`
-		Gender domain.Gender `query:"gender"`
+		AgeMin       uint8         `query:"ageMin"`
+		AgeMax       uint8         `query:"ageMax"`
+		Gender       domain.Gender `query:"gender"`
+		OrderByLikes bool          `query:"orderByLikes"`
 	}
 	var r req
 	if err := e.Bind(&r); err != nil {
@@ -32,9 +33,10 @@ func (c Controller) profiles(e echo.Context) error {
 	userID := domain.UserIDFromContext(e.Request().Context())
 
 	users, err := c.svc.ListPotentialMatches(e.Request().Context(), userID, domain.ListPotentialMatchesFilter{
-		AgeMin: r.AgeMin,
-		AgeMax: r.AgeMax,
-		Gender: r.Gender,
+		AgeMin:       r.AgeMin,
+		AgeMax:       r.AgeMax,
+		Gender:       r.Gender,
+		OrderByLikes: r.OrderByLikes,
 	})
 	if err != nil {
 		return fmt.Errorf("cannot list potential matches: %w", err)

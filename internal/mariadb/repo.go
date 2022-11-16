@@ -3,9 +3,6 @@ package mariadb
 import (
 	"context"
 	"database/sql"
-	"fmt"
-
-	"github.com/GerardRodes/muzz-backend/internal/domain"
 )
 
 type Repo struct {
@@ -14,72 +11,6 @@ type Repo struct {
 
 func NewRepo(db *sql.DB) Repo {
 	return Repo{db}
-}
-
-const listPotentialMatchesQuery = `
-SELECT
-	u.id,
-	u.name,
-	u.gender,
-	u.age,
-	ST_DISTANCE_SPHERE(Point(?, ?), u.location) as "distanceFromMe"
-FROM users u
-WHERE u.id != ?
-	AND u.id NOT IN (
-		SELECT s.profile_id FROM swipes s WHERE s.user_id = ?
-	)
-`
-const listPotentialMatchesMinAgeFilter = `
-	AND u.age >= ?
-`
-const listPotentialMatchesMaxAgeFilter = `
-	AND u.age <= ?
-`
-const listPotentialMatchesGenderFilter = `
-	AND u.gender = ?
-`
-
-const listPotentialMatchesQueryEnd = `
-ORDER BY distanceFromMe ASC
-`
-
-func (r Repo) ListPotentialMatches(
-	ctx context.Context,
-	user domain.User,
-	filter domain.ListPotentialMatchesFilter,
-) ([]domain.ListPotentialMatchesResult, error) {
-	query := listPotentialMatchesQuery
-	args := []any{user.Location.Lng, user.Location.Lat, user.ID, user.ID}
-	if filter.AgeMin != 0 {
-		query += listPotentialMatchesMinAgeFilter
-		args = append(args, filter.AgeMin)
-	}
-	if filter.AgeMax != 0 {
-		query += listPotentialMatchesMaxAgeFilter
-		args = append(args, filter.AgeMax)
-	}
-	if filter.Gender != "" {
-		query += listPotentialMatchesGenderFilter
-		args = append(args, filter.Gender)
-	}
-	query += listPotentialMatchesQueryEnd
-
-	rows, err := r.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("execute query: %w", err)
-	}
-	defer rows.Close()
-
-	var results []domain.ListPotentialMatchesResult
-	for rows.Next() {
-		var result domain.ListPotentialMatchesResult
-		if err := rows.Scan(&result.ID, &result.Name, &result.Gender, &result.Age, &result.DistanceFromMe); err != nil {
-			return nil, fmt.Errorf("scan result: %w", err)
-		}
-		results = append(results, result)
-	}
-
-	return results, nil
 }
 
 const swipeQuery = `

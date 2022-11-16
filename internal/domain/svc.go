@@ -35,9 +35,10 @@ func NewService(r Repo, ss SessionStorage) Service {
 }
 
 type ListPotentialMatchesFilter struct {
-	AgeMin uint8
-	AgeMax uint8
-	Gender Gender
+	AgeMin       uint8
+	AgeMax       uint8
+	Gender       Gender
+	OrderByLikes bool
 }
 
 type ListPotentialMatchesResult struct {
