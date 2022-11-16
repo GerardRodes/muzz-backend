@@ -18,6 +18,10 @@ func (s Service) CreateRandomUser(ctx context.Context) (User, string, error) {
 		Name:   name,
 		Gender: Genders[rand.Intn(len(Genders))],
 		Age:    uint8(rand.Intn(70) + 18),
+		Location: Point{
+			Lat: float64(-89+rand.Intn(179)) + rand.Float64(),
+			Lng: float64(-179+rand.Intn(359)) + rand.Float64(),
+		},
 	}
 
 	var err error

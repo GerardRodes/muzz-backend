@@ -13,14 +13,15 @@ INSERT INTO users (
 	password,
 	name,
 	gender,
-	age
+	age,
+	location
 ) VALUES (
-	?, ?, ?, ?, ?
+	?, ?, ?, ?, ?, Point(?, ?)
 ) RETURNING id
 `
 
 func (r Repo) CreateUser(ctx context.Context, user domain.User, passwordHash []byte) (id uint32, err error) {
-	row := r.db.QueryRowContext(ctx, createUserQuery, user.Email, passwordHash, user.Name, user.Gender, user.Age)
+	row := r.db.QueryRowContext(ctx, createUserQuery, user.Email, passwordHash, user.Name, user.Gender, user.Age, user.Location.Lng, user.Location.Lat)
 	err = row.Scan(&id)
 	return
 }
@@ -30,7 +31,8 @@ SELECT
 	email,
 	name,
 	gender,
-	age
+	age,
+	location
 FROM users
 WHERE id = ?
 `
@@ -38,7 +40,7 @@ WHERE id = ?
 func (r Repo) GetUser(ctx context.Context, userID uint32) (user domain.User, err error) {
 	row := r.db.QueryRowContext(ctx, getUserQuery, userID)
 	user.ID = userID
-	err = row.Scan(&user.Email, &user.Name, &user.Gender, &user.Age)
+	err = row.Scan(&user.Email, &user.Name, &user.Gender, &user.Age, &user.Location)
 	return
 }
 

@@ -41,7 +41,7 @@ func (c Controller) profiles(e echo.Context) error {
 	}
 
 	type resp struct {
-		Results []domain.User `json:"results"`
+		Results []domain.ListPotentialMatchesResult `json:"results"`
 	}
 	return e.JSON(http.StatusOK, resp{Results: users})
 }

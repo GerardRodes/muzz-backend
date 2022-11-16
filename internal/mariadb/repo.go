@@ -21,7 +21,8 @@ SELECT
 	u.id,
 	u.name,
 	u.gender,
-	u.age
+	u.age,
+	ST_DISTANCE_SPHERE(Point(?, ?), u.location) as "distanceFromMe"
 FROM users u
 WHERE u.id != ?
 	AND u.id NOT IN (
@@ -38,9 +39,17 @@ const listPotentialMatchesGenderFilter = `
 	AND u.gender = ?
 `
 
-func (r Repo) ListPotentialMatches(ctx context.Context, user domain.User, filter domain.ListPotentialMatchesFilter) ([]domain.User, error) {
+const listPotentialMatchesQueryEnd = `
+ORDER BY distanceFromMe ASC
+`
+
+func (r Repo) ListPotentialMatches(
+	ctx context.Context,
+	user domain.User,
+	filter domain.ListPotentialMatchesFilter,
+) ([]domain.ListPotentialMatchesResult, error) {
 	query := listPotentialMatchesQuery
-	args := []any{user.ID, user.ID}
+	args := []any{user.Location.Lng, user.Location.Lat, user.ID, user.ID}
 	if filter.AgeMin != 0 {
 		query += listPotentialMatchesMinAgeFilter
 		args = append(args, filter.AgeMin)
@@ -53,6 +62,7 @@ func (r Repo) ListPotentialMatches(ctx context.Context, user domain.User, filter
 		query += listPotentialMatchesGenderFilter
 		args = append(args, filter.Gender)
 	}
+	query += listPotentialMatchesQueryEnd
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -60,16 +70,16 @@ func (r Repo) ListPotentialMatches(ctx context.Context, user domain.User, filter
 	}
 	defer rows.Close()
 
-	var users []domain.User
+	var results []domain.ListPotentialMatchesResult
 	for rows.Next() {
-		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Name, &user.Gender, &user.Age); err != nil {
-			return nil, fmt.Errorf("scan user: %w", err)
+		var result domain.ListPotentialMatchesResult
+		if err := rows.Scan(&result.ID, &result.Name, &result.Gender, &result.Age, &result.DistanceFromMe); err != nil {
+			return nil, fmt.Errorf("scan result: %w", err)
 		}
-		users = append(users, user)
+		results = append(results, result)
 	}
 
-	return users, nil
+	return results, nil
 }
 
 const swipeQuery = `
