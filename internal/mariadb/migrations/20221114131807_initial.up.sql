@@ -1,10 +1,13 @@
 CREATE TABLE users (
-	id 				INT4 UNSIGNED AUTO_INCREMENT NOT NULL,
-	email 		VARCHAR(255) NOT NULL,
-	password 	BINARY(60) NOT NULL,
-	name 			VARCHAR(255) NOT NULL,
-	gender 		ENUM('male', 'female') NOT NULL,
-	age 			INT1 UNSIGNED NOT NULL,
-	PRIMARY KEY (id),
+	id 					INT4 UNSIGNED AUTO_INCREMENT NOT NULL,
+	email 			VARCHAR(255) NOT NULL,
+	password 		BINARY(60) NOT NULL,
+	name 				VARCHAR(255) NOT NULL,
+	gender 			ENUM('male', 'female') NOT NULL,
+	age 				INT1 UNSIGNED NOT NULL,
+	created_at	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	deleted_at	TIMESTAMP,
+
+	PRIMARY KEY(id),
 	UNIQUE INDEX(email)
 );

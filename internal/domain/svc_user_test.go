@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestCreate(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	testcases := map[string]struct {
 		u        User
 		password string
@@ -105,8 +105,8 @@ func TestCreate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			userSvc := NewUserSvc(userRepoStub{})
-			_, err := userSvc.Create(context.Background(), tc.u, tc.password)
+			userSvc := NewService(userRepoStub{})
+			_, err := userSvc.CreateUser(context.Background(), tc.u, tc.password)
 			var errMsg string
 			if err != nil {
 				errMsg = err.Error()
@@ -121,9 +121,9 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestCreateRandom(t *testing.T) {
-	userSvc := NewUserSvc(userRepoStub{654})
-	u, password, err := userSvc.CreateRandom(context.Background())
+func TestCreateRandomUser(t *testing.T) {
+	userSvc := NewService(userRepoStub{654})
+	u, password, err := userSvc.CreateRandomUser(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error: %v", err)
 	}
@@ -145,14 +145,26 @@ type userRepoStub struct {
 	id uint32
 }
 
-func (r userRepoStub) Create(ctx context.Context, u User, password []byte) (uint32, error) {
-	return r.id, nil
+func (r userRepoStub) GetUser(ctx context.Context, userID uint32) (User, error) {
+	return User{}, nil
 }
 
-func (r userRepoStub) Get(ctx context.Context, userID uint32) (user User, err error) {
-	return User{}, nil
+func (r userRepoStub) CreateUser(ctx context.Context, user User, passwordHash []byte) (uint32, error) {
+	return r.id, nil
 }
 
 func (r userRepoStub) ListPotentialMatches(ctx context.Context, user User) ([]User, error) {
 	return nil, nil
+}
+
+func (r userRepoStub) Swipe(ctx context.Context, userID, profileID uint32, preference bool) error {
+	return nil
+}
+
+func (r userRepoStub) BothLiked(ctx context.Context, userID, profileID uint32) (bool, error) {
+	return false, nil
+}
+
+func (r userRepoStub) CreateMatch(ctx context.Context, userID1, userID2 uint32) (uint64, error) {
+	return 0, nil
 }

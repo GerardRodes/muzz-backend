@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/GerardRodes/muzz-backend/internal/config"
 	"github.com/GerardRodes/muzz-backend/internal/domain"
@@ -27,12 +28,10 @@ func main() {
 		}
 	}()
 
-	userSvc := domain.NewUserSvc(mariadb.NewUserRepo(db))
-
 	if err := httpserver.Init(httpserver.Config{
-		HTTPPort:   cfg.HTTPPort,
-		UserSvc:    userSvc,
-		ProfileSvc: userSvc,
+		HTTPPort:        cfg.HTTPPort,
+		Service:         domain.NewService(mariadb.NewRepo(db)),
+		HandlersTimeout: time.Second * 5,
 	}); err != nil {
 		log.Fatalf("cannot init http server: %s", err)
 	}
