@@ -45,8 +45,13 @@ func run() error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 		defer cancel()
 
-		if err := rdb.Ping(ctx).Err(); err != nil {
-			return fmt.Errorf("cannot reach redis: %w", err)
+		for {
+			err := rdb.Ping(ctx).Err()
+			if err == nil {
+				break
+			}
+			log.Printf("cannot reach redis: %s", err)
+			time.Sleep(time.Second)
 		}
 	}
 	defer func() {
@@ -88,8 +93,13 @@ func initDBHandle(cfg config.Config) (*sql.DB, error) {
 
 	db := sql.OpenDB(connector)
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("cannot reach the database: %w", err)
+	for {
+		err := db.Ping()
+		if err == nil {
+			break
+		}
+		log.Printf("cannot reach the database: %s", err)
+		time.Sleep(time.Second)
 	}
 
 	return db, nil

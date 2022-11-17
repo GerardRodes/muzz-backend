@@ -3,12 +3,17 @@ version: '3.9'
 services:
   muzz:
     build: .
+    restart: on-failure
     env_file: .env
+    depends_on:
+      - db
+      - kv
     ports:
       - "$MUZZ_HOST_HTTP_PORT:$MUZZ_HTTP_PORT"
 
   kv:
     image: redis:7.0-bullseye
+    restart: always
     ports:
       - "$MUZZ_HOST_KV_PORT:6379"
     volumes:
@@ -18,7 +23,7 @@ services:
     image: mariadb:10.9-jammy
     restart: always
     environment:
-      MARIADB_NAME: $MUZZ_DB_NAME
+      MARIADB_DATABASE: $MUZZ_DB_NAME
       MARIADB_USER: $MUZZ_DB_USER
       MARIADB_PASSWORD: $MUZZ_DB_PASSWORD
       MARIADB_ROOT_PASSWORD: $MUZZ_DB_ROOT_PASSWORD
@@ -26,6 +31,15 @@ services:
       - "$MUZZ_HOST_DB_PORT:3306"
     volumes:
       - db-data:/var/lib/mysql
+
+  migrations:
+    image: migrate/migrate
+    restart: on-failure:99
+    depends_on:
+      - db
+    volumes:
+      - ./internal/mariadb/migrations:/migrations
+    command: -path=/migrations/ -database "mysql://root:$MUZZ_DB_ROOT_PASSWORD@tcp(db:3306)/$MUZZ_DB_NAME" up
 
 volumes:
   db-data:
