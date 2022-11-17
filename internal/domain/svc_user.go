@@ -13,9 +13,10 @@ import (
 
 // userRandomCounter allows to create multiple accounts on same timestamp
 // without email colision, so we can execute comands like this:
-// 	❯ seq 1 1000 | xargs -P1000 -n1 curl -XPOST http://localhost:8080/user/create
+//
+//	❯ seq 1 1000 | xargs -P1000 -n1 curl -XPOST http://localhost:8080/user/create
+//
 // and safely create 1000 users without CPU locks
-
 var userRandomCounter atomic.Uint32
 
 // CreateRandomUser creates a user with random values

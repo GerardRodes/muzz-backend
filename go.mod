@@ -3,6 +3,7 @@ module github.com/GerardRodes/muzz-backend
 go 1.19
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/uuid v1.3.0
