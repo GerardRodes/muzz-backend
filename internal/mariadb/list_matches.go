@@ -17,12 +17,11 @@ func (r Repo) ListPotentialMatches(
 
 	if filter.OrderByLikes {
 		query += `
-			WITH likes AS (
-				SELECT u.id AS "user_id", count(s.user_id) AS "cnt"
+			WITH attractiveness AS (
+				SELECT u.id AS "user_id", 2*SUM(s.preference) - COUNT(s.user_id) as "score"
 				FROM users u
-				LEFT JOIN swipes s ON s.profile_id = u.id AND s.preference IS TRUE
+				LEFT JOIN swipes s ON s.profile_id = u.id
 				GROUP BY u.id
-				ORDER BY "likes"
 			)
 		`
 	}
@@ -39,7 +38,7 @@ func (r Repo) ListPotentialMatches(
 
 	if filter.OrderByLikes {
 		query += `
-			LEFT JOIN likes l ON l.user_id = u.id
+			LEFT JOIN attractiveness a ON a.user_id = u.id
 		`
 	}
 
@@ -71,7 +70,7 @@ func (r Repo) ListPotentialMatches(
 
 	if filter.OrderByLikes {
 		query += `
-			ORDER BY l.cnt DESC
+			ORDER BY a.score DESC
 		`
 	} else {
 		query += `
