@@ -1,12 +1,16 @@
 version: '3.9'
 
 services:
-  # todo: muzz
+  muzz:
+    build: .
+    env_file: .env
+    ports:
+      - "$MUZZ_HOST_HTTP_PORT:$MUZZ_HTTP_PORT"
 
   kv:
     image: redis:7.0-bullseye
     ports:
-      - "$MUZZ_DEV_KV_PORT:6379"
+      - "$MUZZ_HOST_KV_PORT:6379"
     volumes:
       - kv-data:/data
 
@@ -19,7 +23,7 @@ services:
       MARIADB_PASSWORD: $MUZZ_DB_PASSWORD
       MARIADB_ROOT_PASSWORD: $MUZZ_DB_ROOT_PASSWORD
     ports:
-      - "$MUZZ_DEV_DB_PORT:3306"
+      - "$MUZZ_HOST_DB_PORT:3306"
     volumes:
       - db-data:/var/lib/mysql
 
